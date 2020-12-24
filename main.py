@@ -15,9 +15,12 @@ class comida():
 class game():
     cobra=[membro(50,150)]
     comida=comida(0,0)
+    color=(0,255,0)
 
 def main():
     pygame.init()
+    pygame.font.init()
+    text = pygame.font.SysFont('Comic Sans MS', 15)
     MAX=500
     DISPLAY=pygame.display.set_mode((MAX,MAX),0,32)
 
@@ -30,57 +33,66 @@ def main():
     direction = 'w'
     i = 0
     jogo = game
+    
+    def randColor():
+        jogo.color = (random.randrange(50,255),random.randrange(50,255),random.randrange(50,255))
 
     def move():
+        cabeca = jogo.cobra[0]
+        novoMembro = membro(-50,-50)
         if direction == 'w':
-            if jogo.cobra[0].y-50<0:
-                jogo.cobra.insert(0, membro(jogo.cobra[0].x,MAX-50 ))
+            if cabeca.y-50<0:
+                novoMembro = membro(cabeca.x,MAX-50 )
             else:
-                jogo.cobra.insert(0, membro(jogo.cobra[0].x,jogo.cobra[0].y-50 ))
+                novoMembro = membro(cabeca.x,cabeca.y-50 )
         if direction == 'a':
-            if jogo.cobra[0].x-50<0:
-                jogo.cobra.insert(0, membro(MAX-50,jogo.cobra[0].y ))
+            if cabeca.x-50<0:
+                novoMembro = membro(MAX-50,cabeca.y )
             else:
-                jogo.cobra.insert(0, membro(jogo.cobra[0].x-50,jogo.cobra[0].y ))
+                novoMembro = membro(cabeca.x-50,cabeca.y )
         if direction == 's':
-            if jogo.cobra[0].y+50>MAX-50:
-                jogo.cobra.insert(0, membro(jogo.cobra[0].x,0))
-
+            if cabeca.y+50>MAX-50:
+                novoMembro = membro(cabeca.x,0)
             else:
-                jogo.cobra.insert(0, membro(jogo.cobra[0].x,jogo.cobra[0].y+50 ))
+                novoMembro = membro(cabeca.x,cabeca.y+50 )
         if direction == 'd':
-            if jogo.cobra[0].x+50>MAX-50:
-                jogo.cobra.insert(0, membro(0,jogo.cobra[0].y ))
+            if cabeca.x+50>MAX-50:
+                novoMembro = membro(0,cabeca.y )
             else:
-                jogo.cobra.insert(0, membro(jogo.cobra[0].x+50,jogo.cobra[0].y ))
+                novoMembro = membro(cabeca.x+50,cabeca.y)
+        if(novoMembro in jogo.cobra):
+            alive = False
+        jogo.cobra.insert(0,novoMembro)
 
-        if jogo.cobra[0].x == jogo.comida.x and jogo.cobra[0].y == jogo.comida.y:
-            print(jogo.cobra[0].x == jogo.comida.x,jogo.cobra[0].y == jogo.comida.y)
-            jogo.cobra.append(membro(jogo.cobra[len(jogo.cobra)-1].x, jogo.cobra[len(jogo.cobra)-1].y))
+        if cabeca.x == jogo.comida.x and cabeca.y == jogo.comida.y:
+            randColor()
+            jogo.cobra.append(jogo.cobra[len(jogo.cobra)-1])
             geterateFood()
-        else:
-            jogo.cobra = jogo.cobra[:-1]
-
+        jogo.cobra = jogo.cobra[:-1]
+   
     def paintSnake():
+        color = jogo.color
         paintFood()
         for el in jogo.cobra:
             index = jogo.cobra.index(el)
             if(index==0):
                 pygame.draw.rect(DISPLAY,BLACK,(el.x,el.y,50,50))
-                pygame.draw.rect(DISPLAY,GREEN,(el.x+23,el.y+23,4,4))
-                pygame.draw.rect(DISPLAY,GREEN,(el.x,el.y,50,4))
-                pygame.draw.rect(DISPLAY,GREEN,(el.x,el.y,4,50))
-                pygame.draw.rect(DISPLAY,GREEN,(el.x,el.y+46,50,4))
-                pygame.draw.rect(DISPLAY,GREEN,(el.x+46,el.y,4,50))
+                pygame.draw.rect(DISPLAY,color,(el.x+23,el.y+23,4,4))
+                pygame.draw.rect(DISPLAY,color,(el.x,el.y,50,4))
+                pygame.draw.rect(DISPLAY,color,(el.x,el.y,4,50))
+                pygame.draw.rect(DISPLAY,color,(el.x,el.y+46,50,4))
+                pygame.draw.rect(DISPLAY,color,(el.x+46,el.y,4,50))
             else:
-                if(index % 2 == 0):
-                    pygame.draw.rect(DISPLAY,RED,(el.x,el.y,50,50))
-                else:
-                    pygame.draw.rect(DISPLAY,BLUE,(el.x,el.y,50,50))
+                pygame.draw.rect(DISPLAY,BLACK,(el.x,el.y,50,50))
+                pygame.draw.rect(DISPLAY,color,(el.x,el.y+23,50,4))
+                pygame.draw.rect(DISPLAY,color,(el.x+23,el.y,4,50))
+                # if(index % 2 == 0):
+                #     pygame.draw.rect(DISPLAY,GREEN,(el.x,el.y,50,50))
+                # else:
+                #     pygame.draw.rect(DISPLAY,GREEN,(el.x,el.y,50,50))
 
     def paintFood():
         pygame.draw.rect(DISPLAY,RED,(jogo.comida.x,jogo.comida.y,50,50))
-
 
     def geterateFood():
         vazio = [] 
@@ -94,15 +106,16 @@ def main():
             paintFood()
 
     geterateFood()
-    while True:
-        
+    alive = True
+    while alive:
         i+=1
         if i>=200:
             move()
             i=0
-        DISPLAY.fill(WHITE)
+        DISPLAY.fill(BLACK)
         paintSnake()
-
+        DISPLAY.blit(text.render(str(len(jogo.cobra)), False, WHITE),(0,0))
+        
         for event in pygame.event.get():
             if event.type==KEYDOWN:
                 if  event.unicode in sides:
