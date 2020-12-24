@@ -7,6 +7,9 @@ class membro():
         self.x=x
         self.y=y
 
+    def __eq__(self, other): 
+        return self.x == other.x and self.y == other.y
+
 class comida():
     def __init__(self,x,y):
         self.x=x
@@ -16,11 +19,12 @@ class game():
     cobra=[membro(50,150)]
     comida=comida(0,0)
     color=(0,255,0)
+    alive = True
 
 def main():
     pygame.init()
     pygame.font.init()
-    text = pygame.font.SysFont('Comic Sans MS', 15)
+    text = pygame.font.SysFont('Comic Sans MS', 30)
     MAX=500
     DISPLAY=pygame.display.set_mode((MAX,MAX),0,32)
 
@@ -60,8 +64,11 @@ def main():
                 novoMembro = membro(0,cabeca.y )
             else:
                 novoMembro = membro(cabeca.x+50,cabeca.y)
+        
+
         if(novoMembro in jogo.cobra):
-            alive = False
+            jogo.alive = False
+
         jogo.cobra.insert(0,novoMembro)
 
         if cabeca.x == jogo.comida.x and cabeca.y == jogo.comida.y:
@@ -106,15 +113,14 @@ def main():
             paintFood()
 
     geterateFood()
-    alive = True
-    while alive:
+    while jogo.alive:
         i+=1
         if i>=200:
             move()
             i=0
         DISPLAY.fill(BLACK)
         paintSnake()
-        DISPLAY.blit(text.render(str(len(jogo.cobra)), False, WHITE),(0,0))
+        DISPLAY.blit(text.render(str(len(jogo.cobra)), False, WHITE),(5,5))
         
         for event in pygame.event.get():
             if event.type==KEYDOWN:
