@@ -1,4 +1,4 @@
-var max = 40;
+var max = 100;
 var pont = document.getElementById("points");
 var head = document.getElementById("headAt");
 var food = document.getElementById("foodAt");
@@ -13,14 +13,11 @@ ctx.canvas.height = max;
 ctx.canvas.width = max;
 var alive = true;
 var moved = false;
-var start = 20;
-var x = start;
-var y = start;
 
 var foodx = 0;
 var foody = 0;
 var heading = "s";
-var tail = [];
+var tail = [{ x: 20, y: 20 }];
 var lastTail = {};
 var tailColor = getTailColor();
 var fColor = "black";
@@ -41,8 +38,8 @@ document.onkeypress = function ({ key }) {
       (key === "d" && heading != "a"))
   ) {
     heading = key;
-    game();
-    // moved = true;
+    // game();
+    moved = true;
   }
 };
 
@@ -51,7 +48,7 @@ tamanho.onchange = setSize();
 function setSize() {
   var calda = [];
   for (var i = 0; i < tamanho.valueAsNumber; i++) {
-    calda.push({ x: start, y: start });
+    calda.push({ x: 50, y: 50 });
   }
   tail = calda;
 }
@@ -60,9 +57,9 @@ velocidade.onchange = () => {
   document.location.reload();
 };
 
-// setInterval(() => {
-//   if (alive) game();
-// }, velocidade.valueAsNumber);
+setInterval(() => {
+  if (alive) game();
+}, 500);
 
 function getTailColor() {
   return `rgb(${Math.random() * 255},${Math.random() * 255},${
@@ -72,191 +69,40 @@ function getTailColor() {
 
 function drawSnakeHead() {
   ctx.fillStyle = fColor;
-  ctx.fillRect(x, y, 10, 10);
-
-  switch (heading) {
-    case "s":
-      ctx.fillStyle = "red";
-      ctx.fillRect(x + 2, y + 7, 2, 2);
-      ctx.fillRect(x + 6, y + 7, 2, 2);
-
-      //Lingua
-      if (y + 11 < max) {
-        ctx.fillStyle = "red";
-        ctx.fillRect(x + 4, y + 10, 1, 1);
-
-        ctx.fillStyle = "red";
-        ctx.fillRect(x + 4, y + 11, 2, 1);
-
-        ctx.fillStyle = "red";
-        ctx.fillRect(x + 5, y + 11, 1, 2);
-      }
-      break;
-    case "d":
-      ctx.fillStyle = "red";
-      ctx.fillRect(x + 7, y + 2, 2, 2);
-
-      ctx.fillStyle = "red";
-      ctx.fillRect(x + 7, y + 6, 2, 2);
-
-      //Lingua
-      if (x + 11 < max) {
-        ctx.fillStyle = "red";
-        ctx.fillRect(x + 10, y + 4, 1, 1);
-
-        ctx.fillStyle = "red";
-        ctx.fillRect(x + 11, y + 4, 1, 2);
-
-        ctx.fillStyle = "red";
-        ctx.fillRect(x + 11, y + 5, 2, 1);
-      }
-      break;
-    case "w":
-      ctx.fillStyle = "red";
-      ctx.fillRect(x + 2, y + 2, 2, 2);
-
-      ctx.fillStyle = "red";
-      ctx.fillRect(x + 6, y + 2, 2, 2);
-
-      //Lingua
-      ctx.fillStyle = "red";
-      ctx.fillRect(x + 4, y - 2, 1, 2);
-
-      ctx.fillStyle = "red";
-      ctx.fillRect(x + 4, y - 3, 2, 1);
-
-      ctx.fillStyle = "red";
-      ctx.fillRect(x + 5, y - 4, 1, 2);
-      break;
-    case "a":
-      ctx.fillStyle = "red";
-      ctx.fillRect(x + 2, y + 2, 2, 2);
-
-      ctx.fillStyle = "red";
-      ctx.fillRect(x + 2, y + 6, 2, 2);
-
-      //Lingua
-      ctx.fillStyle = "red";
-      ctx.fillRect(x - 2, y + 4, 2, 1);
-
-      ctx.fillStyle = "red";
-      ctx.fillRect(x - 2, y + 4, 1, 2);
-
-      ctx.fillStyle = "red";
-      ctx.fillRect(x - 4, y + 5, 2, 1);
-      break;
-  }
+  ctx.fillRect(tail[0].x, tail[0].y, 10, 10);
 }
 
 function drawSnakeBody() {
+  ctx.fillStyle = "yellow";
   var tx = 0;
   var ty = 0;
   for (var i = 0; i < tail.length; i++) {
-    switch (heading) {
-      case "w":
-        ty = y + 10;
-        tx = x;
-        break;
-      case "d":
-        ty = y;
-        tx = x - 10;
-        break;
-      case "s":
-        ty = y - 10;
-        tx = x;
-        break;
-      case "a":
-        ty = y;
-        tx = x + 10;
-        break;
-    }
-    ctx.fillStyle = i % 2 === 0 ? fColor : sColor;
-    if (i === 0) {
-      lastTail = tail[i];
-      tail[i] = { x: tx, y: ty };
-      ctx.fillRect(tail[i].x, tail[i].y, 10, 10);
-    } else if (i === 1) {
-      lastTail = tail[i];
-      tail[i] = { x: tx, y: ty };
-      ctx.fillRect(lastTail.x, lastTail.y, 10, 10);
-    } else {
-      switch (heading) {
-        case "w":
-          ty = lastTail.y;
-          tx = lastTail.x;
-          break;
-        case "d":
-          ty = lastTail.y;
-          tx = lastTail.x;
-          break;
-        case "s":
-          ty = lastTail.y;
-          tx = lastTail.x;
-          break;
-        case "a":
-          ty = lastTail.y;
-          tx = lastTail.x;
-          break;
-      }
-      lastTail = tail[i];
-      tail[i] = { x: tx, y: ty };
-      ctx.fillRect(lastTail.x, lastTail.y, 10, 10);
-    }
-    if (
-      ((tx === x && ty === y) || (tail[i].x === x && tail[i].y === y)) &&
-      colCorpo.checked
-    )
-      alive = false;
+    ctx.fillRect(tail[i].x, tail[i].y, 10, 10);
   }
 }
 
 function walk() {
-  if (colParedes.checked)
-    switch (heading) {
-      case "w":
-        if (y - 10 >= 0) y -= 10;
-        else alive = false;
-        break;
-      case "d":
-        if (x + 10 < max) x += 10;
-        else alive = false;
-        break;
-      case "s":
-        if (y + 10 < max) y += 10;
-        else alive = false;
-        break;
-      case "a":
-        if (x - 10 >= 0) x -= 10;
-        else alive = false;
-        break;
-    }
-  else
-    switch (heading) {
-      case "w":
-        if (y - 10 >= 0) y -= 10;
-        else y = max - 10;
-        break;
-      case "d":
-        if (x + 10 < max) x += 10;
-        else x = 0;
-        break;
-      case "s":
-        if (y + 10 < max) y += 10;
-        else y = 0;
-        break;
-      case "a":
-        if (x - 10 >= 0) x -= 10;
-        else x = max - 10;
-        break;
-    }
+  switch (heading) {
+    case "w":
+      tail.push({ x: tail[0].x, y: tail[0].y - 10 });
+      break;
+    case "d":
+      break;
+    case "s":
+      break;
+    case "a":
+      break;
+  }
 
-  if (x === foodx && y === foody) {
+  if (tail[0].x === foodx && tail[0].y === foody) {
     tail.push(lastTail);
     generateFood();
     tailColor = getTailColor();
     fColor = getTailColor();
     sColor = getTailColor();
   }
+
+  tail.splice(tail.length);
 }
 
 function getEspacosVazios() {
@@ -272,12 +118,7 @@ function getEspacosVazios() {
 function generateFood() {
   getEspacosVazios();
   const val = Math.abs((Math.random() * vazios.length - 1).toFixed(0));
-  console.log("comida", { x: foodx, y: foody });
-  console.log("vazios", vazios);
-  console.log("tail", tail);
   var pos = vazios[val];
-  console.log("pos", pos);
-  console.log("ocupado", isOcupado(pos.x, pos.y));
   foodx = pos.x;
   foody = pos.y;
 
