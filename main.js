@@ -1,4 +1,4 @@
-var max = 500;
+var max = 40;
 var pont = document.getElementById("points");
 var head = document.getElementById("headAt");
 var food = document.getElementById("foodAt");
@@ -9,27 +9,30 @@ var tamanho = document.getElementById("tamanho");
 
 var c = document.getElementById("field");
 var ctx = c.getContext("2d");
-
+ctx.canvas.height = max;
+ctx.canvas.width = max;
 var alive = true;
 var moved = false;
 var start = 20;
 var x = start;
 var y = start;
 
-var foodx = 50;
-var foody = 50;
+var foodx = 0;
+var foody = 0;
 var heading = "s";
 var tail = [];
 var lastTail = {};
 var tailColor = getTailColor();
 var fColor = "black";
 var sColor = "red";
+var vazios = [];
 
 ctx.fillStyle = "green";
 ctx.fillRect(0, 0, max, max);
 
 document.onkeypress = function ({ key }) {
   if (
+    alive &&
     !moved &&
     (key === "w" || key === "a" || key === "s" || key === "d") &&
     ((key === "w" && heading != "s") ||
@@ -38,7 +41,8 @@ document.onkeypress = function ({ key }) {
       (key === "d" && heading != "a"))
   ) {
     heading = key;
-    moved = true;
+    game();
+    // moved = true;
   }
 };
 
@@ -56,9 +60,9 @@ velocidade.onchange = () => {
   document.location.reload();
 };
 
-setInterval(() => {
-  if (alive) game();
-}, velocidade.valueAsNumber);
+// setInterval(() => {
+//   if (alive) game();
+// }, velocidade.valueAsNumber);
 
 function getTailColor() {
   return `rgb(${Math.random() * 255},${Math.random() * 255},${
@@ -245,62 +249,100 @@ function walk() {
         else x = max - 10;
         break;
     }
+
   if (x === foodx && y === foody) {
     tail.push(lastTail);
-    tailColor = getTailColor();
     generateFood();
+    tailColor = getTailColor();
     fColor = getTailColor();
     sColor = getTailColor();
   }
 }
 
+function getEspacosVazios() {
+  vazios = [];
+  for (let i = 0; i <= max - 10; i += 10) {
+    for (let j = 0; j <= max - 10; j += 10) {
+      console.log(isOcupado(i, j));
+      if (!isOcupado(i, j)) vazios.push({ x: i, y: j });
+    }
+  }
+}
+
 function generateFood() {
-  var x = Math.random().toFixed(1) * max - 10;
-  var y = Math.random().toFixed(1) * max - 10;
-  foodx = x < 0 ? 0 : x;
-  foody = y < 0 ? 0 : y;
+  getEspacosVazios();
+  const val = Math.abs((Math.random() * vazios.length - 1).toFixed(0));
+  console.log("comida", { x: foodx, y: foody });
+  console.log("vazios", vazios);
+  console.log("tail", tail);
+  var pos = vazios[val];
+  console.log("pos", pos);
+  console.log("ocupado", isOcupado(pos.x, pos.y));
+  foodx = pos.x;
+  foody = pos.y;
+
+  ctx.fillStyle = "red";
+  ctx.fillRect(foodx, foody, 10, 10);
+}
+
+function isOcupado(px, py) {
+  return tail.find(
+    (t) =>
+      (t.x === px && t.y === py) ||
+      (t.x === x && t.y === y) ||
+      (px === foodx && py === foody) ||
+      (px === lastTail.x && py === lastTail.y)
+  );
+}
+
+function enviarPos() {
+  var data = JSON.stringify({
+    cabeca: { x, y },
+    corpo: tail,
+    comida: { x: foodx, y: foody },
+  });
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", "http://localhost:3000");
+  xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+  xhr.send(data);
 }
 
 function game() {
   moved = false;
-  pont.innerHTML = tail.length;
-  head.innerHTML = `{ x:${x}, y:${y} }`;
-  food.innerHTML = `{ x:${foodx}, y:${foody} }`;
 
   if (tail.length < 50000) {
     ctx.fillStyle = "green";
     ctx.fillRect(0, 0, max, max);
     ctx.fillStyle = "red";
     ctx.fillRect(foodx, foody, 10, 10);
-
-    // ctx.arc(foodx + 5, foody + 5, 1, 0, 2 * Math.PI);
-    // ctx.stroke();
     walk();
     drawSnakeHead();
     drawSnakeBody();
   }
-  // //block
-  // ctx.fillStyle = "red";
-  // ctx.fillRect(490, 20, 10, 10);
-  // ctx.fillStyle = "white";
-  // ctx.fillRect(490, 20, 10, 0.9);
-  // ctx.fillRect(500, 20, 0.9, 5);
-  // ctx.fillRect(490, 20, 0.9, 5);
-  // ctx.fillRect(495, 20, 0.9, 5);
-  // ctx.fillRect(490, 24, 10, 2);
-  // ctx.fillRect(493, 25, 0.9, 4);
-  // ctx.fillRect(497, 25, 0.9, 4);
-  // ctx.fillRect(490, 29, 10, 0.9);
-  // //block
-  // ctx.fillStyle = "red";
-  // ctx.fillRect(490, 30, 10, 10);
-  // ctx.fillStyle = "white";
-  // ctx.fillRect(490, 30, 10, 0.9);
-  // ctx.fillRect(500, 30, 0.9, 5);
-  // ctx.fillRect(490, 30, 0.9, 5);
-  // ctx.fillRect(495, 30, 0.9, 5);
-  // ctx.fillRect(490, 34, 10, 2);
-  // ctx.fillRect(493, 35, 0.9, 4);
-  // ctx.fillRect(497, 35, 0.9, 4);
-  // ctx.fillRect(490, 39, 10, 0.9);
 }
+// ctx.arc(foodx + 5, foody + 5, 1, 0, 2 * Math.PI);
+// ctx.stroke();
+// //block
+// ctx.fillStyle = "red";
+// ctx.fillRect(490, 20, 10, 10);
+// ctx.fillStyle = "white";
+// ctx.fillRect(490, 20, 10, 0.9);
+// ctx.fillRect(500, 20, 0.9, 5);
+// ctx.fillRect(490, 20, 0.9, 5);
+// ctx.fillRect(495, 20, 0.9, 5);
+// ctx.fillRect(490, 24, 10, 2);
+// ctx.fillRect(493, 25, 0.9, 4);
+// ctx.fillRect(497, 25, 0.9, 4);
+// ctx.fillRect(490, 29, 10, 0.9);
+// //block
+// ctx.fillStyle = "red";
+// ctx.fillRect(490, 30, 10, 10);
+// ctx.fillStyle = "white";
+// ctx.fillRect(490, 30, 10, 0.9);
+// ctx.fillRect(500, 30, 0.9, 5);
+// ctx.fillRect(490, 30, 0.9, 5);
+// ctx.fillRect(495, 30, 0.9, 5);
+// ctx.fillRect(490, 34, 10, 2);
+// ctx.fillRect(493, 35, 0.9, 4);
+// ctx.fillRect(497, 35, 0.9, 4);
+// ctx.fillRect(490, 39, 10, 0.9);
